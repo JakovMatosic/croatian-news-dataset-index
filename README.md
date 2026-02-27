@@ -20,5 +20,4 @@ The CSV contains the following columns:
 - **Cleaning:** HTML tags and `&nbsp;` entities have been removed; whitespace has been normalized.
 
 ## License & Attribution
-This compilation is provided for research and educational purposes. Content copyright belongs to Index.hr. 
-https://creativecommons.org/licenses/by/4.0/
+This compilation is provided for research and educational purposes. Content copyright belongs to Index.hr.
