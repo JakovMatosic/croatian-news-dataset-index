@@ -1,16 +1,13 @@
-import torch
 import pandas as pd
 import sys
 import os
 import time
 
-# Move imports inside to prevent circular import issues on some Windows setups
-from bertopic import BERTopic
-from sentence_transformers import SentenceTransformer
-from sentence_transformers.models import Transformer, Pooling
-from gensim.models.coherencemodel import CoherenceModel
-from gensim.corpora.dictionary import Dictionary
-from gensim.models.ldamodel import LdaModel
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
+
 
 def main():
     print("--- STARTING SECURE LOAD SEQUENCE ---")
@@ -25,19 +22,28 @@ def main():
             print("❌ File not found!")
             return
 
-        # Using fastparquet + only 1 column + head(500) to be safe
         df = pd.read_parquet(
             'politics_comments_joined.parquet', 
             columns=['document'], 
-            engine='fastparquet'
+            engine='pyarrow'
         )
-        documents = df['document'].head(500).astype(str).tolist()
+        documents = df['document'].dropna().astype(str).tolist()
         print(f"✅ Data loaded. Found {len(documents)} documents.")
         sys.stdout.flush()
         del df # Free up RAM
     except Exception as e:
         print(f"❌ DATA ERROR: {e}")
         return
+    
+    from bertopic import BERTopic
+    from sentence_transformers import SentenceTransformer
+    from sentence_transformers.sentence_transformer import modules
+    Transformer = modules.Transformer
+    Pooling = modules.Pooling
+    from gensim.models.coherencemodel import CoherenceModel
+    from gensim.corpora.dictionary import Dictionary
+    from gensim.models.ldamodel import LdaModel
+    import torch
 
     # STEP 2: INITIALIZE GPU
     print("🚀 Initializing GPU...")
@@ -63,7 +69,10 @@ def main():
     # STEP 4: BERTopic
     print("🧠 Training BERTopic...")
     sys.stdout.flush()
-    topic_model = BERTopic(embedding_model=embedder, nr_topics=20, verbose=True)
+    topic_model = BERTopic(
+        nr_topics="auto",   # better than fixed 20
+        min_topic_size=15   # avoids tiny clusters
+    )
     topics, _ = topic_model.fit_transform(documents, embeddings)
 
     print(f"✅ SUCCESS! Topics found: {len(set(topics))}")
