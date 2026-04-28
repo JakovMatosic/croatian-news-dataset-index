@@ -1,3 +1,24 @@
-pandas
 requests
 tqdm
+
+# Use the specific NVIDIA GPU index for Windows
+--index-url https://download.pytorch.org/whl/cu124
+
+# Core AI & GPU Support (Security Hardened v2.6.0)
+torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+
+# NLP & Topic Modeling
+bertopic
+sentence-transformers
+transformers
+classla
+
+# Data Processing & Parquet Support
+pandas
+fastparquet
+pyarrow
+
+# Evaluation Metrics
+gensim

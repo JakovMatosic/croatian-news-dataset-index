@@ -1,3 +1,4 @@
 # Ignore logs
 logs.txt
 index_comments_results.csv
+dataset_venv/
