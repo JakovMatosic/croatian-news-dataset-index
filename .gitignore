@@ -2,3 +2,5 @@
 logs.txt
 index_comments_results.csv
 dataset_venv/
+bertic_politics_model/
+lemmatized_docs.parquet
