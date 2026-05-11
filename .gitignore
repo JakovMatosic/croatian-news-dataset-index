@@ -4,3 +4,4 @@ index_comments_results.csv
 dataset_venv/
 bertic_politics_model/
 lemmatized_docs.parquet
+extracted_topics_report.csv
