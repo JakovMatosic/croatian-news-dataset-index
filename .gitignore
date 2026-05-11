@@ -5,3 +5,4 @@ dataset_venv/
 bertic_politics_model/
 lemmatized_docs.parquet
 extracted_topics_report.csv
+politics_final_enriched.parquet
