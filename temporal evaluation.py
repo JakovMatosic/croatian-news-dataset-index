@@ -101,7 +101,7 @@ if p_val < 0.05:
 else:
     print("❌ Result: No statistically viable toxicity break found near the election threshold.")
 
-# 5. Visualizing Evolution alongside Context Milestones (PRETTIER VERSION)
+# 5. Visualizing Evolution alongside Context Milestones (FILTERED FOR 2022+)
 plt.figure(figsize=(15, 7))
 sns.set_theme(style="whitegrid")
 
@@ -111,8 +111,13 @@ if df['is_toxic'].max() <= 1.0:
 else:
     df['toxic_pct'] = df['is_toxic']
 
-# Grupiranje i crtanje osnovne linije
+# Grupiranje na mjesečnoj razini
 monthly_metrics = df.groupby('month_str')['toxic_pct'].mean().reset_index()
+
+# 🔥 KLJUČNI DODATAK: Filtriramo podatke i ostavljamo samo od siječnja 2022. nadalje
+monthly_metrics = monthly_metrics[monthly_metrics['month_str'] >= '2022-01'].reset_index(drop=True)
+
+# Crtanje osnovne linije trenda (sada samo za razdoblje 2022-2026)
 ax = sns.lineplot(
     data=monthly_metrics, 
     x='month_str', 
@@ -123,12 +128,12 @@ ax = sns.lineplot(
     label='Toksičnost %'
 )
 
-# --- POPRAVAK 1: Pametno prorjeđivanje X-osi ---
-# Prikazujemo svaku 6. oznaku (polugodišnje) umjesto svake pojedinačne, da se datumi ne preklapaju
+# --- PAMETNO PRORJEĐIVANJE X-OSI ---
+# Budući da sada imamo manje mjeseci na grafu (oko 50 umjesto 105), prikazujemo svaki 3. mjesec za optimalnu čitljivost
 x_ticks = monthly_metrics['month_str'].values
-plt.xticks(ticks=range(0, len(x_ticks), 6), labels=x_ticks[::6], rotation=45, ha='right', fontsize=10)
+plt.xticks(ticks=range(0, len(x_ticks), 3), labels=x_ticks[::3], rotation=45, ha='right', fontsize=10)
 
-# --- POPRAVAK 2: Cik-cak pozicioniranje oznaka događaja ---
+# --- CIK-CAK POZICIONIRANJE OZNAKA DOGAĐAJA ---
 milestones = {
     '2024-04': 'Parlamentarni\nizbori',
     '2024-05': 'Sastavljanje\nIII. Vlade',
@@ -137,9 +142,8 @@ milestones = {
     '2025-01': 'Pobjeda Milanovića\n(2.k)'
 }
 
-# Definiramo različite visine za tekst kako se ne bi sudarali (cik-cak efekt)
-y_max = monthly_metrics['toxic_pct'].max()
-height_levels = [y_max * 0.92, y_max * 0.78, y_max * 0.64, y_max * 0.85, y_max * 0.71]
+# Definiramo visine unutar stvarnog raspona podataka (između 50% i 90% jer linija više ne pada na nulu)
+height_levels = [88, 78, 66, 84, 72]
 
 for idx, (date, label) in enumerate(milestones.items()):
     if date in monthly_metrics['month_str'].values:
@@ -149,7 +153,7 @@ for idx, (date, label) in enumerate(milestones.items()):
         # Odabir visine za ovaj specifični tekst
         current_y = height_levels[idx % len(height_levels)]
         
-        # Ispis teksta s elegantnim bijelim okvirom
+        # Ispis natpisa s elegantnim bijelim okvirom
         plt.text(
             date, current_y, label, 
             rotation=0, fontsize=9, weight='bold', color='#2c3e50',
@@ -158,13 +162,16 @@ for idx, (date, label) in enumerate(milestones.items()):
         )
 
 # Minimalističko poliranje ostatka grafikona
-plt.title("Evolucija toksičnosti komentara kroz ključne političke događaje u RH", fontsize=15, weight='bold', pad=15)
+plt.title("Evolucija toksičnosti komentara kroz ključne političke događaje u RH (2022 - 2026)", fontsize=15, weight='bold', pad=15)
 plt.xlabel("Vremenska crta (Mjesec)", fontsize=12, labelpad=10)
 plt.ylabel("Postotak toksičnih komentara (%)", fontsize=12, labelpad=10)
-plt.ylim(0, 105) # Fiksna skala od 0 do 100% radi lakšeg čitanja konteksta
+
+# Sužavamo Y-os na raspon od 50% do 95% jer se u tom rasponu kreću stvarni podaci od 2022.
+# Na taj način će se bolje vidjeti sitne oscilacije i stvarni utjecaj izbora!
+plt.ylim(50, 95) 
 
 plt.legend(loc='upper left', frameon=True, facecolor='white', edgecolor='#bdc3c7')
 plt.tight_layout()
 
-plt.savefig('political_evolution_timeline.png', dpi=300) # dpi=300 osigurava oštru sliku za rad
-print("\n📈 Prettier visualization compiled to 'political_evolution_timeline.png'")
+plt.savefig('political_evolution_timeline.png', dpi=300)
+print("\n📈 Prettier filtered visualization compiled to 'political_evolution_timeline.png'")
