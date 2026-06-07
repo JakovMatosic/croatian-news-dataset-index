@@ -29,45 +29,98 @@ The archive contains a comprehensive record of Index.hr metadata spanning from 2
 
 ## 🛠️ Repository Contents
 | File | Purpose |
-|-------------|---------|
-| `index-scraper.py` | Crawl sitemaps and build raw CSV archives. |
-| `comment_scraper.py` | High-speed extraction of user comments for sentiment/topic analysis. |
-| `bertic_model_quality_control.py` | New: Topic modeling using BERTopic + classla/bcms-bertic. |
-| `data_sorter.py` | Filter and clean datasets by category or date range. |
-| `news_classifier.py` | Categorizes articles using keyword-based heuristics. |
+# Croatian News Dataset Index
 
-## 🧠 Advanced Usage: Topic Modeling
+A toolkit for crawling, indexing, and analyzing Croatian news from Index.hr (2002–2026). This repository includes scrapers, data cleaning utilities, comment extraction, and topic-modeling analysis with the Croatian BERTić model.
 
-To analyze the "Quality" of topics within the politics dataset using the Croatian BERTić model:
-```bash
-python bertic_model_quality_control.py
+**Status:** research / analysis code. Use for research and educational purposes; respect Index.hr terms of service and robots.txt.
+
+**This README covers:** repository layout, environment setup (Windows/Linux), key scripts, how to run them, and troubleshooting notes.
+
+## Quick setup (recommended)
+
+You can use the included `dataset_venv` (already provisioned) or create a fresh venv. These instructions use a new venv for clarity.
+
+Windows (PowerShell):
+```powershell
+python -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-### Why this script is unique:
-- **Hardware Accelerated:** Automatically detects and utilizes NVIDIA GPUs (e.g., RTX 4050).
-- **Security Hardened:** Requires PyTorch 2.6.0+ to mitigate CVE-2025-32434.
-- **Evaluation:** Directly compares BERTić results against a traditional LDA baseline using Coherence (cv​) and Diversity metrics.
+Linux / macOS:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-## 🔧 Workflow Examples
-1. **Scrape Article Metadata**
-   ```bash
-   python index-scraper.py --output index_hr_clean_2002_2026.csv
-   ```
-2. **Filter for Politics**
-   ```bash
-   python data_sorter.py --input index_hr_clean_2002_2026.csv --category politics --output index_politics_final.csv
-   ```
-3. **Extract Comments**
-   ```bash
-   python comment_scraper.py --input index_politics_final.csv --output politics_comments_joined.parquet
-   ```
+GPU notes:
+- The `requirements.txt` contains a PyTorch wheel index URL for CUDA 12.4 (`--index-url`). If you do not have an NVIDIA GPU, install CPU-only PyTorch or remove the index line and install a CPU wheel.
+- If using the included `dataset_venv`, activate it with `dataset_venv\\Scripts\\activate` (Windows) or `source dataset_venv/bin/activate` (Unix).
 
-## ⚠️ Important Considerations
-- **Environment Stability:** If the scripts crash silently on Windows, ensure you are using the `uv` environment. Some scripts use "Late Imports" to prevent DLL conflicts between torch and pandas.
-- **Ethics:** Respect robots.txt and the terms of service of Index.hr. This dataset is intended for research and educational purposes only.
+## Repository overview
+
+- **Data files**: `index_hr_clean_2002_2026.csv`, `index_hr_clean_vijesti_only.csv`, `index_politics_final.csv` — cleaned metadata CSVs.
+- **Scrapers**:
+  - `index-scraper.py`: crawl sitemaps and build raw CSV archives.
+  - `comment_scraper.py`: extract user comments (can output Parquet).
+- **Processing / utilities**:
+  - `data_sorter.py`: filter/clean datasets by category/date range.
+  - `comment_news_merger.py`: merge article metadata with comment datasets.
+  - `news_classifier.py`: simple heuristics classifier for quick tag/category filtering.
+- **Modeling & analysis**:
+  - `bertic_model_quality_control.py`: runs BERTopic-style topic modeling with Croatian BERTić embeddings and evaluates topic quality.
+  - `inspect_topics.py`, `temporal evaluation.py`, `visualizations_robustness.py`, `toxicity_analysis.py`, `toxicity_visualiser.py`: analysis & viz helpers.
+- **Outputs**:
+  - `extracted_topics_report.csv`, `model_evaluation_report.txt`, various `.html` visualizations produced by the modeling scripts.
+
+## Common workflows
+
+1) Scrape article metadata
+```bash
+python index-scraper.py --output index_hr_clean_2002_2026.csv
+```
+
+2) Filter for politics
+```bash
+python data_sorter.py --input index_hr_clean_2002_2026.csv --category politics --output index_politics_final.csv
+```
+
+3) Extract comments for a set of articles
+```bash
+python comment_scraper.py --input index_politics_final.csv --output politics_comments_joined.parquet
+```
+
+4) Topic modeling and evaluation (BERTić)
+```bash
+python bertic_model_quality_control.py --input index_politics_final.csv --outdir outputs/bertic_quality
+```
+The script will create HTML visualizations and CSV reports in the output directory.
+
+## How to run safely on Windows
+
+- Activate a fresh venv before importing heavy packages like `torch` or `pandas` to avoid DLL conflicts.
+- If you see import-time crashes, try importing `torch` after `pandas` or use the provided `dataset_venv`.
+
+## Troubleshooting
+
+- Missing CUDA / GPU issues: install matching `torch` wheel for your CUDA version, or use CPU-only wheels.
+- Memory errors during modeling: reduce batch sizes or run on smaller subsets (`--sample N`).
+- If a script is silent on failure, run it with `python -u script.py` to see unbuffered logs.
+
+## Development notes
+
+- The codebase is research-focused and may include quick utility scripts (not production hardened).
+- Tests are not provided; validate runs on a small sample before large-scale processing.
+
+## Files changed
+- Updated `README.md` and `requirements.txt` to improve setup guidance and reproducibility.
 
 ## License
 
-Scripts are released under the MIT License. Article content and metadata are copyright of Index.hr.
+MIT. Article content and metadata are the property of Index.hr; use responsibly and for research/education.
 
-Happy dataset exploring! If you find this useful for Croatian NLP research, feel free to contribute! 😊
+If you'd like, I can run a local dependency check or pin exact versions from the `dataset_venv` to `requirements.txt` next.
